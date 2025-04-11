@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "vercel-build": "echo 'Build step completed'",
     "build": "echo 'Build step completed'",
     "dev": "nodemon index.js"
   },
@@ -29,6 +30,7 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": "14.x"
+    "node": "14.x",
+    "npm": "6.x"
   }
 } 

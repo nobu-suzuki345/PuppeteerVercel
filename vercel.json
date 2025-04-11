@@ -3,17 +3,17 @@
   "builds": [
     {
       "src": "index.js",
-      "use": "@vercel/node@2.8.2",
+      "use": "@vercel/node",
       "config": {
         "maxDuration": 60,
-        "nodeVersion": "14.x"
+        "runtime": "nodejs14"
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "index.js"
+      "dest": "/index.js"
     }
   ],
   "env": {
