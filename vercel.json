@@ -5,7 +5,8 @@
       "src": "index.js",
       "use": "@vercel/node@2.8.2",
       "config": {
-        "maxDuration": 60
+        "maxDuration": 60,
+        "nodeVersion": "14.x"
       }
     }
   ],
