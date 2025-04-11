@@ -3,10 +3,9 @@
   "builds": [
     {
       "src": "index.js",
-      "use": "@vercel/node",
+      "use": "@vercel/node@2.8.2",
       "config": {
-        "maxDuration": 60,
-        "memory": 3008
+        "maxDuration": 60
       }
     }
   ],
@@ -17,7 +16,6 @@
     }
   ],
   "env": {
-    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
     "NODE_ENV": "production"
   }
 } 

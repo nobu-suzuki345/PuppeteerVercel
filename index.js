@@ -2,8 +2,8 @@ const express = require('express');
 const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const puppeteer = require('puppeteer');
-const chromium = require('puppeteer/lib/cjs/puppeteer/chromium');
+const puppeteer = require('puppeteer-core');
+const chrome = require('chrome-aws-lambda');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +19,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// ルートページ
+// エラーハンドリングミドルウェア
+app.use((err, req, res, next) => {
+  console.error('エラーが発生しました:', err);
+  res.status(500).json({ error: err.message });
+});
+
+// メインのルートハンドラー
 app.get('/', (req, res) => {
   res.render('index', { results: null, url: '', error: null });
 });
@@ -68,8 +74,8 @@ async function simulateCrawler(url) {
         '--single-process',
         '--no-zygote'
     ],
-    headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath
+    executablePath: await chrome.executablePath,
+    headless: true
   });
   const page = await browser.newPage();
   
@@ -579,6 +585,11 @@ function generateEvaluation(data) {
     topImprovements
   };
 }
+
+// 404ハンドラー
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
 
 // サーバー起動
 app.listen(PORT, () => {
