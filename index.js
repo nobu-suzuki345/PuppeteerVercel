@@ -3,6 +3,7 @@ const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
+const chromium = require('puppeteer/lib/cjs/puppeteer/chromium');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,17 +60,16 @@ async function simulateCrawler(url) {
   
   // Puppeteerでページを取得（JavaScript実行あり）
   const browser = await puppeteer.launch({
-    headless: 'new',
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote',
-      '--no-first-run'
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process',
+        '--no-zygote'
     ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 'chrome-aws-lambda'
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath
   });
   const page = await browser.newPage();
   
