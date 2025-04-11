@@ -65,9 +65,11 @@ async function simulateCrawler(url) {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--single-process'
+      '--single-process',
+      '--no-zygote',
+      '--no-first-run'
     ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 'chrome-aws-lambda'
   });
   const page = await browser.newPage();
   
