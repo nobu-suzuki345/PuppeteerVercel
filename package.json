@@ -5,8 +5,9 @@
   "description": "Googleのクローラーがサイトをどう見るかシミュレートするSEOツール",
   "main": "index.js",
   "scripts": {
+    "dev": "node index.js",
     "start": "node index.js",
-    "build": "npm install"
+    "build": "npm ci"
   },
   "keywords": [
     "seo",
@@ -28,7 +29,6 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": "14.x",
-    "npm": ">=7.0.0"
+    "node": "14.x"
   }
 } 
