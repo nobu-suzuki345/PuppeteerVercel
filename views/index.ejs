@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クローラーシミュレーター</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>クローラーシミュレーター</h1>
+    <p>Googleのクローラーがあなたのサイトをどのように見ているか確認しましょう！</p>
+  </header>
+
+  <main>
+    <section class="search-section">
+      <form action="/simulate" method="POST">
+        <div class="input-group">
+          <input 
+            type="text" 
+            name="url" 
+            id="url" 
+            placeholder="URLを入力してください（例: example.com）" 
+            value="<%= url %>"
+            required
+          >
+          <button type="submit">シミュレーション実行</button>
+        </div>
+      </form>
+      
+      <% if (error) { %>
+        <div class="error-message">
+          <p><%= error %></p>
+        </div>
+      <% } %>
+    </section>
+
+    <% if (results) { %>
+      <!-- 評価スコアセクション -->
+      <section class="score-overview">
+        <div class="score-container">
+          <div class="score-circle" data-score="<%= results.evaluation.overallScore %>">
+            <div class="score-value"><%= results.evaluation.overallScore %></div>
+            <div class="score-label">点</div>
+          </div>
+          <div class="score-info">
+            <h2>SEO総合評価: <span class="rating <%= results.evaluation.rating %>"><%= results.evaluation.rating %></span></h2>
+            <p><%= results.evaluation.overallAdvice[0] %></p>
+            
+            <div class="top-improvements">
+              <h3>優先的に改善すべき項目</h3>
+              <% if (results.evaluation.topImprovements.length > 0) { %>
+                <ul>
+                  <% results.evaluation.topImprovements.forEach(item => { %>
+                    <li>
+                      <strong><%= item.area %>:</strong> <%= item.advice %>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } else { %>
+                <p>素晴らしい！主要な改善点はありません。</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="results-section">
+        <h2>クローラーシミュレーション結果</h2>
+        
+        <div class="results-tabs">
+          <button class="tab-btn active" data-tab="page-info">ページ情報</button>
+          <button class="tab-btn" data-tab="robots-info">ロボット設定</button>
+          <button class="tab-btn" data-tab="content-analysis">コンテンツ分析</button>
+          <button class="tab-btn" data-tab="mobile-info">モバイル対応</button>
+          <button class="tab-btn" data-tab="rendered-vs-raw">レンダリング比較</button>
+          <button class="tab-btn" data-tab="detailed-scores">詳細評価</button>
+        </div>
+        
+        <div class="tab-content active" id="page-info">
+          <h3>基本情報</h3>
+          <table class="info-table">
+            <tr>
+              <th>URL</th>
+              <td><a href="<%= results.pageInfo.url %>" target="_blank"><%= results.pageInfo.url %></a></td>
+            </tr>
+            <tr>
+              <th>タイトル</th>
+              <td><%= results.pageInfo.title %></td>
+            </tr>
+            <tr>
+              <th>説明文</th>
+              <td><%= results.pageInfo.description %></td>
+            </tr>
+            <tr>
+              <th>H1タグ</th>
+              <td>
+                <span class="count-badge"><%= results.pageInfo.h1Count %> 個</span>
+                <% if (results.pageInfo.h1Count > 1) { %>
+                  <span class="warning">複数のH1タグが存在します。Googleは主な見出しを明確にするために1ページに1つのH1タグを推奨しています。</span>
+                <% } %>
+                <% if (results.pageInfo.h1Text.length > 0) { %>
+                  <ul>
+                    <% results.pageInfo.h1Text.forEach(text => { %>
+                      <li><%= text %></li>
+                    <% }); %>
+                  </ul>
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>見出し構造</th>
+              <td>
+                <div class="headings-structure">
+                  <% for (let i = 1; i <= 6; i++) { %>
+                    <div class="heading-item">
+                      <span class="heading-tag">H<%= i %></span>
+                      <span class="heading-count"><%= results.contentAnalysis.headings[`h${i}`] %></span>
+                    </div>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>canonical</th>
+              <td><%= results.pageInfo.canonical %></td>
+            </tr>
+            <tr>
+              <th>HTTPS</th>
+              <td>
+                <% if (results.technicalSEO.usesHttps) { %>
+                  <span class="success">✓ 使用</span>
+                <% } else { %>
+                  <span class="warning">✗ 未使用</span> - セキュリティとSEOのためにHTTPSへの移行を強く推奨します
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>構造化データ</th>
+              <td>
+                <% if (results.technicalSEO.hasSchemaMarkup) { %>
+                  <span class="success">✓ 検出</span> - 構造化データが検出されました
+                <% } else { %>
+                  <span class="warning">✗ 未検出</span> - リッチスニペット表示のために構造化データの追加を検討してください
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>ページ読み込み速度</th>
+              <td>
+                <%= (results.renderedVsRaw.pageLoadTimeMs / 1000).toFixed(2) %> 秒
+                <% if (results.renderedVsRaw.pageLoadTimeMs < 1000) { %>
+                  <span class="success">非常に高速</span>
+                <% } else if (results.renderedVsRaw.pageLoadTimeMs < 2500) { %>
+                  <span class="success">良好</span>
+                <% } else if (results.renderedVsRaw.pageLoadTimeMs < 4000) { %>
+                  <span class="warning">改善の余地あり</span>
+                <% } else { %>
+                  <span class="error">要改善</span>
+                <% } %>
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <div class="tab-content" id="robots-info">
+          <h3>ロボット設定</h3>
+          <table class="info-table">
+            <tr>
+              <th>meta robots</th>
+              <td>
+                <%= results.robotsInfo.metaRobots %>
+                <% if (results.robotsInfo.metaRobots.includes('noindex')) { %>
+                  <span class="warning">noindexが設定されています。このページはGoogleインデックスに登録されません。</span>
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>robots.txt</th>
+              <td>
+                <pre><%= results.robotsInfo.robotsTxt %></pre>
+              </td>
+            </tr>
+            <tr>
+              <th>インデックス除外</th>
+              <td>
+                <% if (results.robotsInfo.blockedElements.noIndexCount > 0) { %>
+                  <span class="warning">noindexタグが<%= results.robotsInfo.blockedElements.noIndexCount %>個見つかりました。</span>
+                <% } else { %>
+                  インデックス除外設定はありません。
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>クロール可能なリンク</th>
+              <td>
+                <% if (results.robotsInfo.blockedElements.hasCrawlableLinks) { %>
+                  内部リンクが見つかりました。クローラーはこれらのリンクをたどることができます。
+                <% } else { %>
+                  <span class="warning">クロール可能な内部リンクが見つかりません。クローラーはこのページから先に進むことができません。</span>
+                <% } %>
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <div class="tab-content" id="content-analysis">
+          <h3>コンテンツ分析</h3>
+          
+          <h4>リンク分析</h4>
+          <div class="stats-container">
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.links.total %></div>
+              <div class="stat-label">総リンク数</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.links.internal %></div>
+              <div class="stat-label">内部リンク</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.links.external %></div>
+              <div class="stat-label">外部リンク</div>
+            </div>
+          </div>
+          
+          <% if (results.contentAnalysis.links.sample.length > 0) { %>
+            <h5>リンクサンプル（最初の10件）</h5>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>リンクテキスト</th>
+                  <th>URL</th>
+                  <th>種類</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% results.contentAnalysis.links.sample.forEach(link => { %>
+                  <tr>
+                    <td><%= link.text || '(テキストなし)' %></td>
+                    <td><%= link.href || '(URLなし)' %></td>
+                    <td><%= link.isInternal ? '内部' : '外部' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+          
+          <h4>画像分析</h4>
+          <div class="stats-container">
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.images.total %></div>
+              <div class="stat-label">総画像数</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.images.withAlt %></div>
+              <div class="stat-label">ALT属性あり</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number"><%= results.contentAnalysis.images.withoutAlt %></div>
+              <div class="stat-label">ALT属性なし</div>
+            </div>
+          </div>
+          
+          <% if (results.contentAnalysis.images.withoutAlt > 0) { %>
+            <div class="tip-box">
+              <p>代替テキスト（alt属性）のない画像が<%= results.contentAnalysis.images.withoutAlt %>個あります。Googleは画像の内容を理解するためにalt属性を使用します。</p>
+            </div>
+          <% } %>
+          
+          <% if (results.contentAnalysis.images.sample.length > 0) { %>
+            <h5>画像サンプル（最初の10件）</h5>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>画像URL</th>
+                  <th>代替テキスト</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% results.contentAnalysis.images.sample.forEach(image => { %>
+                  <tr>
+                    <td><%= image.src || '(URLなし)' %></td>
+                    <td class="<%= image.alt === 'alt属性なし' ? 'warning' : '' %>">
+                      <%= image.alt %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+        
+        <div class="tab-content" id="mobile-info">
+          <h3>モバイル対応</h3>
+          <table class="info-table">
+            <tr>
+              <th>ビューポート設定</th>
+              <td>
+                <% if (results.mobileInfo.hasViewport) { %>
+                  <span class="success">✓ ビューポートメタタグが正しく設定されています。</span>
+                <% } else { %>
+                  <span class="warning">✗ ビューポートメタタグが見つかりません。モバイルデバイスでの表示に問題がある可能性があります。</span>
+                <% } %>
+              </td>
+            </tr>
+          </table>
+          <div class="tip-box">
+            <p>Googleはモバイルファーストインデックスを採用しています。モバイルフレンドリーなウェブサイトはSEOにおいて有利です。</p>
+          </div>
+        </div>
+        
+        <div class="tab-content" id="rendered-vs-raw">
+          <h3>レンダリング比較</h3>
+          
+          <div class="comparison-stats">
+            <div>
+              <p>生HTML: <%= (results.renderedVsRaw.rawHtmlSize / 1024).toFixed(2) %> KB</p>
+              <p>レンダリング後: <%= (results.renderedVsRaw.renderedHtmlSize / 1024).toFixed(2) %> KB</p>
+              <p>差異率: <%= ((results.renderedVsRaw.ratio - 1) * 100).toFixed(2) %>%</p>
+            </div>
+            <div class="tip-box">
+              <% if (results.renderedVsRaw.ratio > 1.3) { %>
+                <p>レンダリング後のHTMLが生HTMLと大きく異なります。これはJavaScriptが動的にコンテンツを生成していることを示します。GoogleはJavaScriptを実行できますが、完全なレンダリングには時間がかかる場合があります。</p>
+              <% } else { %>
+                <p>レンダリング後のHTMLと生HTMLの差があまりありません。ほとんどのコンテンツは静的で、Googleはこれらを簡単にインデックスできるでしょう。</p>
+              <% } %>
+            </div>
+          </div>
+          
+          <div class="screenshots">
+            <div class="screenshot">
+              <h4>JavaScriptなし（クローラー視点）</h4>
+              <img src="data:image/png;base64,<%= results.renderedVsRaw.screenshotWithoutJs %>" alt="JavaScriptなしのスクリーンショット">
+            </div>
+            <div class="screenshot">
+              <h4>JavaScriptあり（ユーザー視点）</h4>
+              <img src="data:image/png;base64,<%= results.renderedVsRaw.screenshotWithJs %>" alt="JavaScriptありのスクリーンショット">
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <p>左側の画像はJavaScriptを無効にした状態（Googleクローラーが最初に見る状態に近い）で、右側はJavaScriptが有効な状態（実際のユーザーが見る状態）です。違いがあれば、Googleがページの内容を理解するのに時間がかかる可能性があります。</p>
+          </div>
+        </div>
+        
+        <!-- 詳細評価タブ -->
+        <div class="tab-content" id="detailed-scores">
+          <h3>詳細SEO評価</h3>
+          
+          <div class="score-details">
+            <% results.evaluation.detailedScores.forEach(item => { %>
+              <div class="score-item">
+                <div class="score-item-header">
+                  <h4><%= item.name %></h4>
+                  <div class="score-meter">
+                    <div class="score-meter-bar" style="width: <%= (item.score / item.maxScore) * 100 %>%"></div>
+                    <span class="score-meter-text"><%= item.score %>/<%= item.maxScore %></span>
+                  </div>
+                </div>
+                <div class="score-item-advice">
+                  <% item.advice.forEach(advice => { %>
+                    <p><%= advice %></p>
+                  <% }); %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+          
+          <div class="advice-box">
+            <h4>重要ポイント</h4>
+            <p>SEOは単一の要素ではなく、様々な要素の組み合わせです。バランスの取れた対策が重要です。</p>
+            <p>特に、以下の要素に注目しましょう：</p>
+            <ul>
+              <li>タイトルとメタディスクリプションは検索結果に直接表示されます</li>
+              <li>コンテンツの品質と適切なキーワード使用は非常に重要です</li>
+              <li>モバイル対応は必須要素です</li>
+              <li>ページ速度はユーザー体験とSEOの両方に影響します</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    <% } else { %>
+      <section class="info-section">
+        <h2>クローラーシミュレーターとは？</h2>
+        <p>このツールは、Googleの検索エンジンボットがあなたのウェブサイトをどのように認識しているかを視覚化します。</p>
+        
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>メタデータ分析</h3>
+            <p>タイトル、ディスクリプション、見出しなどの重要なSEO要素を確認できます。</p>
+          </div>
+          
+          <div class="feature-card">
+            <h3>ロボット設定チェック</h3>
+            <p>robots.txtやmetaタグの設定が適切かどうかを確認できます。</p>
+          </div>
+          
+          <div class="feature-card">
+            <h3>コンテンツ分析</h3>
+            <p>リンクや画像の使用状況を分析し、SEOの改善点を発見できます。</p>
+          </div>
+          
+          <div class="feature-card">
+            <h3>レンダリング比較</h3>
+            <p>JavaScriptありとなしの状態を比較し、クローラーとユーザーの視点の違いを確認できます。</p>
+          </div>
+          
+          <div class="feature-card">
+            <h3>SEO評価スコア</h3>
+            <p>あなたのサイトのSEO状況を100点満点で評価し、具体的な改善アドバイスを提供します。</p>
+          </div>
+        </div>
+        
+        <div class="how-to-use">
+          <h3>使い方</h3>
+          <ol>
+            <li>上の検索ボックスにチェックしたいウェブサイトのURLを入力します</li>
+            <li>「シミュレーション実行」ボタンをクリックします</li>
+            <li>分析結果を確認してSEO改善に役立てましょう</li>
+          </ol>
+        </div>
+      </section>
+    <% } %>
+  </main>
+
+  <footer>
+    <p>© 2023 クローラーシミュレーター</p>
+  </footer>
+
+  <script src="/js/script.js"></script>
+</body>
+</html> 

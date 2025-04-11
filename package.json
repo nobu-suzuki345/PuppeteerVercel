@@ -1,0 +1,32 @@
+{
+  "name": "seo-crawler-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Googleのクローラーがサイトをどう見るかシミュレートするSEOツール",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "seo",
+    "crawler",
+    "simulator",
+    "google"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^21.5.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "ejs": "^3.1.9"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+} 
